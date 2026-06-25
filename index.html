@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SafeSend — Scam Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root { --bg:#0f1117;--card:#1e2334;--border:#2a3050;--gold:#c9a84c;--text:#e8e8f0;--muted:#8890a8;--danger:#e05a5a;--warning:#e0a84c;--success:#4caf82;--mtn:#ffcc00;--airtel:#e40000;--stellar:#7b68ee; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px}
+  .container{width:100%;max-width:680px}
+  .header{text-align:center;margin-bottom:32px;padding-top:16px}
+  .header h1{font-family:'Playfair Display',serif;font-size:36px;color:var(--gold);margin-bottom:6px}
+  .header p{color:var(--muted);font-size:14px}
+  .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:28px;gap:4px}
+  .tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;width:auto}
+  .tab:hover{color:var(--text);background:none}
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  textarea,input,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;margin-bottom:16px}
+  textarea{height:120px;resize:none}
+  textarea:focus,input:focus,select:focus{border-color:var(--gold)}
+  select option{background:var(--card)}
+  button{width:100%;padding:14px;background:var(--gold);color:#0f1117;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s}
+  button:hover{background:#dbb85a}
+  .result{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;animation:fadeIn 0.3s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .result.show{display:block}
+  .risk-badge{display:inline-block;padding:6px 18px;border-radius:30px;font-size:13px;font-weight:700;margin-bottom:20px}
+  .HIGH-RISK{background:#e05a5a22;color:var(--danger);border:1px solid var(--danger)}
+  .SUSPICIOUS{background:#e0a84c22;color:var(--warning);border:1px solid var(--warning)}
+  .SAFE{background:#4caf8222;color:var(--success);border:1px solid var(--success)}
+  .score-bar-wrap{background:var(--bg);border-radius:10px;height:8px;margin-bottom:20px;overflow:hidden}
+  .score-bar{height:100%;border-radius:10px;transition:width 0.5s ease}
+  .detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+  .detail-row:last-child{border-bottom:none}
+  .detail-label{color:var(--muted)}
+  .keywords{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .keyword-tag{background:#e05a5a22;color:var(--danger);border:1px solid var(--danger);padding:4px 12px;border-radius:20px;font-size:12px}
+  .advice-box{background:var(--bg);border-radius:10px;padding:16px;margin-top:16px;font-size:14px;line-height:1.6}
+  .report-section h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:16px}
+  .btn-report{background:#e05a5a22;color:var(--danger);border:1px solid var(--danger)}
+  .btn-report:hover{background:var(--danger);color:#fff}
+  .payment-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+  .method-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:20px 12px;text-align:center;cursor:pointer;transition:all 0.2s}
+  .method-card:hover{border-color:var(--gold)}
+  .method-card.selected{border-color:var(--gold);background:#c9a84c11}
+  .method-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px;font-weight:900}
+  .method-icon.mtn{background:#ffcc0022;border:2px solid var(--mtn);color:var(--mtn)}
+  .method-icon.airtel{background:#e4000022;border:2px solid var(--airtel);color:var(--airtel)}
+  .method-icon.stellar{background:#7b68ee22;border:2px solid var(--stellar);color:var(--stellar)}
+  .method-name{font-size:13px;font-weight:600;color:var(--text)}
+  .method-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .payment-form{display:none}
+  .payment-form.show{display:block}
+  .info-box{border-radius:10px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;background:#7b68ee11;border:1px solid #7b68ee44}
+  .info-box.mtn-info{background:#ffcc0011;border-color:#ffcc0044}
+  .info-box.airtel-info{background:#e4000011;border-color:#e4000044}
+  .phone-ui{background:#0a0d14;border:2px solid var(--border);border-radius:20px;padding:20px;margin-bottom:0}
+  .ussd-screen{background:#111827;border:1px solid var(--border);border-radius:10px;padding:16px;font-size:14px;color:var(--success);min-height:140px;margin-bottom:14px;line-height:1.8;white-space:pre-wrap;font-family:monospace}
+  .ussd-input-row{display:flex;gap:8px;margin-bottom:14px}
+  .ussd-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:16px;font-family:monospace;outline:none;margin-bottom:0;letter-spacing:2px}
+  .ussd-input:focus{border-color:var(--gold)}
+  .btn-send-option{background:var(--gold);color:#0f1117;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;width:auto;transition:all 0.2s}
+  .btn-send-option:hover{background:#dbb85a}
+  .dial-screen{background:#111827;border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-family:monospace;font-size:22px;color:var(--gold);letter-spacing:3px;min-height:56px;margin-bottom:14px;word-break:break-all;text-align:center}
+  .dialpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+  .dial-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:20px;font-weight:600;color:var(--text);cursor:pointer;transition:all 0.15s;width:100%}
+  .dial-btn:hover{background:var(--border);border-color:var(--gold);color:var(--gold)}
+  .dial-btn:active{transform:scale(0.93)}
+  .dialpad-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .btn-call{background:var(--success);color:#fff;border:none;border-radius:10px;padding:16px;font-size:22px;font-weight:700;cursor:pointer;width:100%;transition:all 0.2s}
+  .btn-call:hover{background:#3d9e6a}
+  .btn-del{background:var(--danger);color:#fff;border:none;border-radius:10px;padding:16px;font-size:18px;font-weight:700;cursor:pointer;width:100%;transition:all 0.2s}
+  .btn-del:hover{background:#c44a4a}
+  .dial-hint{font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px}
+  .ussd-spinner{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:140px;background:#111827;border:1px solid var(--border);border-radius:10px;margin-bottom:14px;gap:16px}
+  .ussd-spinner.show{display:flex}
+  .spinner-ring{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinner-text{color:var(--muted);font-size:13px;letter-spacing:1px}
+  .amount-display{background:#0a0d14;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;margin-bottom:12px}
+  .amount-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .amount-value{font-family:'Playfair Display',serif;font-size:32px;color:var(--gold)}
+  .amount-xlm{font-size:13px;color:var(--stellar);margin-top:4px}
+  .num-dialpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+  .num-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:20px;font-weight:600;color:var(--text);cursor:pointer;transition:all 0.15s;width:100%}
+  .num-btn:hover{background:var(--border);border-color:var(--stellar);color:var(--stellar)}
+  .num-btn:active{transform:scale(0.93)}
+  .num-btn.zero{grid-column:span 2}
+  .wallet-status{display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .wallet-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex-shrink:0}
+  .wallet-dot.connected{background:var(--success)}
+  .wallet-addr{font-size:13px;color:var(--muted);font-family:monospace}
+  .wallet-addr.connected{color:var(--success)}
+  .btn-stellar{background:#7b68ee22;color:var(--stellar);border:1px solid var(--stellar)}
+  .btn-stellar:hover{background:var(--stellar);color:#fff}
+  .payment-result{display:none;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:16px;font-size:14px;line-height:1.7;animation:fadeIn 0.3s ease}
+  .payment-result.show{display:block}
+  .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000bb;z-index:100;align-items:center;justify-content:center}
+  .modal-overlay.show{display:flex}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;width:90%;max-width:480px;animation:fadeIn 0.2s ease}
+  .modal h3{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);margin-bottom:8px}
+  .modal p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+  .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all 0.2s}
+  .btn-cancel:hover{border-color:var(--muted);color:var(--text);background:transparent}
+  .btn-confirm{background:var(--stellar);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:all 0.2s}
+  .btn-confirm:hover{background:#6a58dd}
+  .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center}
+  .stat-number{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;margin-bottom:4px}
+  .stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .stat-total .stat-number{color:var(--gold)}
+  .stat-high .stat-number{color:var(--danger)}
+  .stat-sus .stat-number{color:var(--warning)}
+  .stat-safe .stat-number{color:var(--success)}
+  .section-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:14px}
+  .refresh-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;padding:8px 16px;border-radius:8px;width:auto;margin-bottom:20px;cursor:pointer;transition:all 0.2s}
+  .refresh-btn:hover{border-color:var(--gold);color:var(--gold);background:transparent}
+  .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--bg);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:12px 16px;text-align:left;font-weight:600}
+  td{padding:12px 16px;border-top:1px solid var(--border);color:var(--text)}
+  tr:hover td{background:#ffffff05}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .badge-high{background:#e05a5a22;color:var(--danger);border:1px solid var(--danger)}
+  .badge-sus{background:#e0a84c22;color:var(--warning);border:1px solid var(--warning)}
+  .badge-safe{background:#4caf8222;color:var(--success);border:1px solid var(--success)}
+  .empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+  .toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:999}
+  .toast.show{transform:none;opacity:1}
+  .toast.success{background:var(--success);color:#fff}
+  .toast.error{background:var(--danger);color:#fff}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header"><h1>SafeSend</h1><p>Scam Detection System for East Africa</p></div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('detector',this)">Scam Detector</button>
+    <button class="tab" onclick="switchTab('payments',this)">Payments</button>
+    <button class="tab" onclick="switchTab('dashboard',this)">Dashboard</button>
+  </div>
+
+  <!-- DETECTOR -->
+  <div id="tab-detector" class="tab-content active">
+    <div class="card">
+      <label>Message to check</label>
+      <textarea id="message" placeholder="Paste the suspicious message here..."></textarea>
+      <label>Sender phone number (optional)</label>
+      <input id="phone" type="text" placeholder="+256700000000" />
+      <button onclick="checkMessage()">Check for Scam</button>
+    </div>
+    <div class="result" id="result">
+      <div id="risk-badge" class="risk-badge"></div>
+      <div class="score-bar-wrap"><div class="score-bar" id="score-bar"></div></div>
+      <div class="detail-row"><span class="detail-label">Risk Score</span><span id="risk-score"></span></div>
+      <div class="detail-row"><span class="detail-label">Number Flagged</span><span id="number-flagged"></span></div>
+      <div class="detail-row"><span class="detail-label">Keywords Found</span><span id="keyword-count"></span></div>
+      <div class="keywords" id="keywords"></div>
+      <div class="advice-box" id="advice"></div>
+    </div>
+    <div class="card report-section">
+      <h3>Report a Scam Number</h3>
+      <label>Phone number</label>
+      <input id="report-phone" type="text" placeholder="+256700000000" />
+      <label>Reason</label>
+      <input id="report-reason" type="text" placeholder="e.g. Asked for PIN, fake MTN alert" />
+      <button class="btn-report" onclick="reportNumber()">Report Number</button>
+    </div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div id="tab-payments" class="tab-content">
+    <div class="card">
+      <label>Choose payment method</label>
+      <div class="payment-methods">
+        <div class="method-card" onclick="selectMethod('mtn',this)"><div class="method-icon mtn">M</div><div class="method-name">MTN</div><div class="method-sub">Mobile Money</div></div>
+        <div class="method-card" onclick="selectMethod('airtel',this)"><div class="method-icon airtel">A</div><div class="method-name">Airtel</div><div class="method-sub">Money</div></div>
+        <div class="method-card" onclick="selectMethod('stellar',this)"><div class="method-icon stellar">&#10022;</div><div class="method-name">Stellar</div><div class="method-sub">Crypto Wallet</div></div>
+      </div>
+    </div>
+
+    <div id="form-mtn" class="payment-form">
+      <div class="card">
+        <label>MTN Mobile Money</label>
+        <div class="info-box mtn-info">Dial <strong style="color:var(--mtn)">*165#</strong> using the pad, then press Call. After the menu appears use the pad to select your option.</div>
+        <div class="phone-ui">
+          <div class="ussd-spinner" id="mtn-spinner"><div class="spinner-ring"></div><div class="spinner-text">Connecting...</div></div>
+          <div class="ussd-screen" id="mtn-ussd-screen">Dial a USSD code and press Call to begin</div>
+          <div class="ussd-input-row" id="mtn-option-row" style="display:none;">
+            <input class="ussd-input" id="mtn-option-input" type="text" placeholder="Enter option..." />
+            <button class="btn-send-option" onclick="sendOption('mtn')">Send</button>
+          </div>
+          <div class="dial-screen" id="mtn-dial-screen"></div>
+          <p class="dial-hint">Dial your USSD code, then press Call</p>
+          <div class="dialpad-grid">
+            <button class="dial-btn" onclick="dialPress('mtn','1')">1</button><button class="dial-btn" onclick="dialPress('mtn','2')">2</button><button class="dial-btn" onclick="dialPress('mtn','3')">3</button>
+            <button class="dial-btn" onclick="dialPress('mtn','4')">4</button><button class="dial-btn" onclick="dialPress('mtn','5')">5</button><button class="dial-btn" onclick="dialPress('mtn','6')">6</button>
+            <button class="dial-btn" onclick="dialPress('mtn','7')">7</button><button class="dial-btn" onclick="dialPress('mtn','8')">8</button><button class="dial-btn" onclick="dialPress('mtn','9')">9</button>
+            <button class="dial-btn" onclick="dialPress('mtn','*')">*</button><button class="dial-btn" onclick="dialPress('mtn','0')">0</button><button class="dial-btn" onclick="dialPress('mtn','#')">#</button>
+          </div>
+          <div class="dialpad-actions">
+            <button class="btn-call" onclick="dialCall('mtn')">&#128222;</button>
+            <button class="btn-del" onclick="dialDelete('mtn')">&#9003;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="form-airtel" class="payment-form">
+      <div class="card">
+        <label>Airtel Money</label>
+        <div class="info-box airtel-info">Dial <strong style="color:var(--airtel)">*185#</strong> using the pad, then press Call. After the menu appears use the pad to select your option.</div>
+        <div class="phone-ui">
+          <div class="ussd-spinner" id="airtel-spinner"><div class="spinner-ring"></div><div class="spinner-text">Connecting...</div></div>
+          <div class="ussd-screen" id="airtel-ussd-screen">Dial a USSD code and press Call to begin</div>
+          <div class="ussd-input-row" id="airtel-option-row" style="display:none;">
+            <input class="ussd-input" id="airtel-option-input" type="text" placeholder="Enter option..." />
+            <button class="btn-send-option" onclick="sendOption('airtel')">Send</button>
+          </div>
+          <div class="dial-screen" id="airtel-dial-screen"></div>
+          <p class="dial-hint">Dial your USSD code, then press Call</p>
+          <div class="dialpad-grid">
+            <button class="dial-btn" onclick="dialPress('airtel','1')">1</button><button class="dial-btn" onclick="dialPress('airtel','2')">2</button><button class="dial-btn" onclick="dialPress('airtel','3')">3</button>
+            <button class="dial-btn" onclick="dialPress('airtel','4')">4</button><button class="dial-btn" onclick="dialPress('airtel','5')">5</button><button class="dial-btn" onclick="dialPress('airtel','6')">6</button>
+            <button class="dial-btn" onclick="dialPress('airtel','7')">7</button><button class="dial-btn" onclick="dialPress('airtel','8')">8</button><button class="dial-btn" onclick="dialPress('airtel','9')">9</button>
+            <button class="dial-btn" onclick="dialPress('airtel','*')">*</button><button class="dial-btn" onclick="dialPress('airtel','0')">0</button><button class="dial-btn" onclick="dialPress('airtel','#')">#</button>
+          </div>
+          <div class="dialpad-actions">
+            <button class="btn-call" onclick="dialCall('airtel')">&#128222;</button>
+            <button class="btn-del" onclick="dialDelete('airtel')">&#9003;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="form-stellar" class="payment-form">
+      <div class="card">
+        <label>Stellar Wallet</label>
+        <div class="wallet-status" id="wallet-status"><div class="wallet-dot" id="wallet-dot"></div><span class="wallet-addr" id="wallet-addr-text">No wallet connected</span></div>
+        <button class="btn-stellar" id="wallet-btn" onclick="openWalletModal()" style="margin-bottom:20px;">Connect Stellar Wallet</button>
+        <div style="border-top:1px solid var(--border);padding-top:20px;">
+          <label>Recipient Stellar address</label>
+          <input id="stellar-recipient" type="text" placeholder="G... (Stellar public key)" />
+          <label>Amount (UGX)</label>
+          <div class="amount-display">
+            <div class="amount-label">Enter amount</div>
+            <div class="amount-value" id="stellar-amount-display">0</div>
+            <div class="amount-xlm" id="stellar-xlm-display">&#8776; 0.0000 XLM</div>
+          </div>
+          <div class="num-dialpad-grid">
+            <button class="num-btn" onclick="amountPress('1')">1</button><button class="num-btn" onclick="amountPress('2')">2</button><button class="num-btn" onclick="amountPress('3')">3</button>
+            <button class="num-btn" onclick="amountPress('4')">4</button><button class="num-btn" onclick="amountPress('5')">5</button><button class="num-btn" onclick="amountPress('6')">6</button>
+            <button class="num-btn" onclick="amountPress('7')">7</button><button class="num-btn" onclick="amountPress('8')">8</button><button class="num-btn" onclick="amountPress('9')">9</button>
+            <button class="num-btn zero" onclick="amountPress('0')">0</button><button class="num-btn" onclick="amountDelete()">&#9003;</button>
+          </div>
+          <label style="margin-top:16px;">Currency to send</label>
+          <select id="stellar-currency" onchange="updateXLM()">
+            <option value="XLM">XLM — Stellar Lumens</option>
+            <option value="USDC">USDC — US Dollar</option>
+            <option value="UGX">UGX — Uganda Shilling</option>
+          </select>
+          <button class="btn-stellar" onclick="processStellar()">Send via Stellar</button>
+          <div class="payment-result" id="stellar-result"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="tab-content">
+    <button class="refresh-btn" onclick="loadDashboard()">Refresh Data</button>
+    <div class="stats-grid">
+      <div class="stat-card stat-total"><div class="stat-number" id="stat-total">&#8212;</div><div class="stat-label">Total Checks</div></div>
+      <div class="stat-card stat-high"><div class="stat-number" id="stat-high">&#8212;</div><div class="stat-label">High Risk</div></div>
+      <div class="stat-card stat-sus"><div class="stat-number" id="stat-sus">&#8212;</div><div class="stat-label">Suspicious</div></div>
+      <div class="stat-card stat-safe"><div class="stat-number" id="stat-safe">&#8212;</div><div class="stat-label">Safe</div></div>
+    </div>
+    <p class="section-title">Reported Scam Numbers</p>
+    <div class="table-wrap"><table><thead><tr><th>Phone</th><th>Reason</th><th>Reported At</th></tr></thead><tbody id="numbers-table"><tr><td colspan="3" class="empty-state">Loading...</td></tr></tbody></table></div>
+    <p class="section-title">Recent Message Checks</p>
+    <div class="table-wrap"><table><thead><tr><th>Phone</th><th>Risk</th><th>Message</th><th>Date</th></tr></thead><tbody id="reports-table"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="wallet-modal">
+  <div class="modal">
+    <h3>Connect Stellar Wallet</h3>
+    <p>Enter your Stellar public key (starts with G). Never share your secret key with anyone.</p>
+    <label>Your Stellar Public Key</label>
+    <input id="wallet-input" type="text" placeholder="G... (56 characters)" style="margin-bottom:8px;" />
+    <p style="font-size:11px;color:var(--muted);margin-bottom:16px;">Example: GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeWalletModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmWallet()">Connect</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API="http://127.0.0.1:8000";
+let walletConnected=false,walletPublicKey=null,stellarAmount='';
+const dialState={mtn:'',airtel:''};
+const ussdSession={mtn:[],airtel:[]};
+const ussdMenus={
+  mtn:{'':'Welcome to MTN Mobile Money\n1. Send Money\n2. Withdraw Cash\n3. Buy Airtime\n4. Check Balance\n5. Pay Bills\n0. Exit','1':'Send Money\n1. To MTN Number\n2. To Other Network\n3. To Bank Account\n0. Back','1*1':'Enter recipient MTN number:','2':'Withdraw Cash\nEnter agent number:','3':'Buy Airtime\n1. For Myself\n2. For Another Number\n0. Back','4':'Checking balance...\n[Dial on real MTN phone to see actual balance]\n\nSafeCheck: No scam flags on this session.','5':'Pay Bills\n1. UMEME Electricity\n2. Water\n3. TV Subscription\n0. Back','0':'Thank you for using MTN Mobile Money. Goodbye.'},
+  airtel:{'':'Welcome to Airtel Money\n1. Send Money\n2. Withdraw Cash\n3. Buy Airtime\n4. Check Balance\n5. Pay Bills\n0. Exit','1':'Send Money\n1. To Airtel Number\n2. To Other Network\n3. To Bank\n0. Back','1*1':'Enter recipient Airtel number:','2':'Withdraw Cash\nEnter agent number:','3':'Buy Airtime\n1. For Myself\n2. For Another Number\n0. Back','4':'Checking balance...\n[Dial on real Airtel phone to see actual balance]\n\nSafeCheck: No scam flags on this session.','5':'Pay Bills\n1. UMEME Electricity\n2. Water\n3. TV Subscription\n0. Back','0':'Thank you for using Airtel Money. Goodbye.'}
+};
+
+function switchTab(name,el){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');el.classList.add('active');if(name==='dashboard')loadDashboard();}
+function selectMethod(method,el){document.querySelectorAll('.method-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');document.querySelectorAll('.payment-form').forEach(f=>f.classList.remove('show'));document.getElementById('form-'+method).classList.add('show');}
+
+function dialPress(network,char){
+  const optRow=document.getElementById(network+'-option-row');
+  const optInput=document.getElementById(network+'-option-input');
+  if(optRow.style.display==='flex'){optInput.value+=char;optInput.focus();}
+  else{dialState[network]+=char;document.getElementById(network+'-dial-screen').textContent=dialState[network];}
+}
+function dialDelete(network){
+  const optRow=document.getElementById(network+'-option-row');
+  const optInput=document.getElementById(network+'-option-input');
+  if(optRow.style.display==='flex'){optInput.value=optInput.value.slice(0,-1);}
+  else{dialState[network]=dialState[network].slice(0,-1);document.getElementById(network+'-dial-screen').textContent=dialState[network];}
+}
+
+async function dialCall(network){
+  const code=dialState[network];
+  const screen=document.getElementById(network+'-ussd-screen');
+  const spinner=document.getElementById(network+'-spinner');
+  const optRow=document.getElementById(network+'-option-row');
+  if(!code){showToast('Please dial a USSD code first','error');return;}
+  screen.style.display='none';spinner.classList.add('show');optRow.style.display='none';
+  const parts=code.replace(/#/g,'').split('*').filter(Boolean);
+  const phone=parts.find(p=>p.length>=9&&/^\d+$/.test(p))||'';
+  if(phone){
+    try{
+      const res=await fetch(API+'/check-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'USSD dial '+code,phone})});
+      const data=await res.json();
+      if(data.level==='HIGH RISK'){
+        await new Promise(r=>setTimeout(r,1500));
+        spinner.classList.remove('show');screen.style.display='block';
+        screen.style.color='var(--danger)';screen.textContent='BLOCKED BY SAFESEND\n\nNumber '+phone+' is flagged as a scam.\n\n'+data.advice;
+        dialState[network]='';document.getElementById(network+'-dial-screen').textContent='';return;
+      }
+    }catch(e){}
+  }
+  const normalized=code.endsWith('#')?code:code+'#';
+  const validStart=network==='mtn'?normalized.startsWith('*165'):normalized.startsWith('*185');
+  if(!validStart){
+    await new Promise(r=>setTimeout(r,1500));
+    spinner.classList.remove('show');screen.style.display='block';
+    screen.style.color='var(--warning)';screen.textContent='Unrecognised code: '+code+'\n\nFor MTN dial *165#\nFor Airtel dial *185#';
+    dialState[network]='';document.getElementById(network+'-dial-screen').textContent='';return;
+  }
+  await new Promise(r=>setTimeout(r,2000));
+  spinner.classList.remove('show');screen.style.display='block';
+  screen.style.color='var(--success)';ussdSession[network]=[];screen.textContent=ussdMenus[network][''];
+  optRow.style.display='flex';document.getElementById(network+'-option-input').value='';document.getElementById(network+'-option-input').focus();
+  dialState[network]='';document.getElementById(network+'-dial-screen').textContent='';
+}
+
+async function sendOption(network){
+  const input=document.getElementById(network+'-option-input');
+  const option=input.value.trim();
+  const screen=document.getElementById(network+'-ussd-screen');
+  const optRow=document.getElementById(network+'-option-row');
+  const spinner=document.getElementById(network+'-spinner');
+  if(!option){showToast('Please enter an option','error');return;}
+  if(option.length>=9&&/^\d+$/.test(option)){
+    try{
+      const res=await fetch(API+'/check-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Send money to '+option,phone:option})});
+      const data=await res.json();
+      if(data.level==='HIGH RISK'){screen.style.color='var(--danger)';screen.textContent='SAFESEND BLOCKED\n\n'+option+' is flagged as a scam.\n\n'+data.advice;optRow.style.display='none';ussdSession[network]=[];input.value='';return;}
+    }catch(e){}
+  }
+  screen.style.display='none';spinner.classList.add('show');
+  await new Promise(r=>setTimeout(r,700));
+  spinner.classList.remove('show');screen.style.display='block';
+  ussdSession[network].push(option);
+  const path=ussdSession[network].join('*');
+  const menus=ussdMenus[network];
+  const reply=menus[path]||menus[option]||'You selected: '+option+'\n\nTo complete this on a real phone, use your '+(network==='mtn'?'MTN':'Airtel')+' line.\n\nSafeCheck: No scam flags found.';
+  screen.style.color='var(--success)';screen.textContent=reply;input.value='';
+  if(option==='0'||reply.includes('Goodbye')){optRow.style.display='none';ussdSession[network]=[];}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ['mtn','airtel'].forEach(n=>{const inp=document.getElementById(n+'-option-input');if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter')sendOption(n);});});
+});
+
+function amountPress(d){if(stellarAmount.length>9)return;stellarAmount+=d;updateAmountDisplay();}
+function amountDelete(){stellarAmount=stellarAmount.slice(0,-1);updateAmountDisplay();}
+function updateAmountDisplay(){const v=stellarAmount||'0';document.getElementById('stellar-amount-display').textContent=parseInt(v).toLocaleString();updateXLM();}
+function updateXLM(){const ugx=parseFloat(stellarAmount)||0;const cur=document.getElementById('stellar-currency').value;document.getElementById('stellar-xlm-display').textContent=cur==='XLM'?'\u2248 '+(ugx/456).toFixed(4)+' XLM':cur==='USDC'?'\u2248 '+(ugx/3800).toFixed(4)+' USDC':ugx.toLocaleString()+' UGX';}
+
+function openWalletModal(){
+  if(walletConnected){walletConnected=false;walletPublicKey=null;document.getElementById('wallet-dot').className='wallet-dot';document.getElementById('wallet-addr-text').className='wallet-addr';document.getElementById('wallet-addr-text').textContent='No wallet connected';document.getElementById('wallet-btn').textContent='Connect Stellar Wallet';showToast('Wallet disconnected','success');return;}
+  document.getElementById('wallet-input').value='';document.getElementById('wallet-modal').classList.add('show');
+}
+function closeWalletModal(){document.getElementById('wallet-modal').classList.remove('show');}
+function confirmWallet(){
+  const key=document.getElementById('wallet-input').value.trim();
+  if(!key.startsWith('G')||key.length<20){showToast('Please enter a valid Stellar public key starting with G','error');return;}
+  walletConnected=true;walletPublicKey=key;
+  document.getElementById('wallet-dot').className='wallet-dot connected';document.getElementById('wallet-addr-text').className='wallet-addr connected';document.getElementById('wallet-addr-text').textContent=key.substring(0,16)+'...'+key.slice(-6);document.getElementById('wallet-btn').textContent='Disconnect Wallet';
+  closeWalletModal();showToast('Wallet connected successfully','success');
+}
+
+async function processStellar(){
+  const recipient=document.getElementById('stellar-recipient').value.trim();
+  const amount=stellarAmount;const currency=document.getElementById('stellar-currency').value;const resultEl=document.getElementById('stellar-result');
+  if(!walletConnected){showToast('Please connect your Stellar wallet first','error');return;}
+  if(!recipient){showToast('Please enter a recipient address','error');return;}
+  if(!amount||amount==='0'){showToast('Please enter an amount','error');return;}
+  if(!recipient.startsWith('G')||recipient.length<20){showToast('Please enter a valid Stellar address starting with G','error');return;}
+  resultEl.className='payment-result show';resultEl.innerHTML='Running scam check and preparing transaction...';
+  try{
+    const res=await fetch(API+'/check-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Stellar send '+amount+' to '+recipient,phone:''})});
+    const data=await res.json();
+    if(data.level==='HIGH RISK'){resultEl.style.borderColor='var(--danger)';resultEl.innerHTML='<strong style="color:var(--danger)">Transaction Blocked</strong><br><br>'+data.advice;}
+    else{const xlm=(parseFloat(amount)/456).toFixed(4);resultEl.style.borderColor='var(--stellar)';resultEl.innerHTML='<strong style="color:var(--stellar)">Transaction Ready</strong><br><br>From: <span style="font-family:monospace;font-size:12px">'+walletPublicKey.substring(0,16)+'...'+walletPublicKey.slice(-6)+'</span><br>To: <span style="font-family:monospace;font-size:12px">'+recipient.substring(0,16)+'...'+recipient.slice(-6)+'</span><br>Amount: <strong>UGX '+parseInt(amount).toLocaleString()+'</strong><br>Equivalent: <strong>'+xlm+' XLM</strong><br>Currency: <strong>'+currency+'</strong><br><br><span style="color:var(--muted);font-size:12px">Scam check passed. In production this signs and submits to Stellar Network automatically.</span>';}
+  }catch(e){resultEl.innerHTML='Could not connect to server.';}
+}
+
+async function checkMessage(){
+  const message=document.getElementById('message').value.trim();const phone=document.getElementById('phone').value.trim();
+  if(!message){showToast('Please enter a message to check','error');return;}
+  try{const res=await fetch(API+'/check-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,phone})});const data=await res.json();showResult(data);}
+  catch(e){showToast('Could not connect to server','error');}
+}
+function showResult(data){
+  const result=document.getElementById('result');result.classList.add('show');
+  const badge=document.getElementById('risk-badge');badge.textContent=data.level;badge.className='risk-badge '+data.level.replace(' ','-');
+  const score=data.risk_score*100;const bar=document.getElementById('score-bar');bar.style.width=score+'%';bar.style.background=score>=60?'#e05a5a':score>=30?'#e0a84c':'#4caf82';
+  document.getElementById('risk-score').textContent=score.toFixed(0)+'%';document.getElementById('number-flagged').textContent=data.number_flagged?'YES':'No';document.getElementById('keyword-count').textContent=data.keywords_found.length;
+  document.getElementById('keywords').innerHTML=data.keywords_found.map(k=>'<span class="keyword-tag">'+k+'</span>').join('');document.getElementById('advice').textContent=data.advice;result.scrollIntoView({behavior:'smooth'});
+}
+
+async function reportNumber(){
+  const phone=document.getElementById('report-phone').value.trim();const reason=document.getElementById('report-reason').value.trim();
+  if(!phone){showToast('Please enter a phone number','error');return;}
+  try{const res=await fetch(API+'/report-number',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,reason})});const data=await res.json();showToast(data.message,'success');document.getElementById('report-phone').value='';document.getElementById('report-reason').value='';}
+  catch(e){showToast('Could not connect to server','error');}
+}
+
+async function loadDashboard(){
+  try{
+    const stats=await(await fetch(API+'/scam-stats')).json();
+    document.getElementById('stat-total').textContent=stats.total_checks;document.getElementById('stat-high').textContent=stats.high_risk;document.getElementById('stat-sus').textContent=stats.suspicious;document.getElementById('stat-safe').textContent=stats.safe;
+    const nums=await(await fetch(API+'/all-reported-numbers')).json();
+    document.getElementById('numbers-table').innerHTML=nums.length===0?'<tr><td colspan="3" class="empty-state">No numbers reported yet</td></tr>':nums.map(n=>'<tr><td>'+n.phone+'</td><td style="color:var(--muted)">'+(n.reason||'&#8212;')+'</td><td style="color:var(--muted)">'+formatDate(n.reported_at)+'</td></tr>').join('');
+    const reps=await(await fetch(API+'/all-scam-reports')).json();
+    document.getElementById('reports-table').innerHTML=reps.length===0?'<tr><td colspan="4" class="empty-state">No message checks yet</td></tr>':reps.slice(-20).reverse().map(r=>{const s=parseFloat(r.risk_score);const b=s>=0.6?'<span class="badge badge-high">HIGH RISK</span>':s>=0.3?'<span class="badge badge-sus">SUSPICIOUS</span>':'<span class="badge badge-safe">SAFE</span>';const m=r.message.length>40?r.message.substring(0,40)+'...':r.message;return'<tr><td>'+(r.phone||'&#8212;')+'</td><td>'+b+'</td><td style="color:var(--muted)">'+m+'</td><td style="color:var(--muted)">'+formatDate(r.reported_at)+'</td></tr>';}).join('');
+  }catch(e){showToast('Could not load dashboard data','error');}
+}
+
+function formatDate(str){if(!str)return'&#8212;';const d=new Date(str);if(isNaN(d))return str.split('.')[0];return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>{t.className='toast';},3000);}
+</script>
+</body>
+</html>

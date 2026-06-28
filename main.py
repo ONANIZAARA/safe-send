@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine
-from routes import messages, numbers, reports, ussd
+from routes import messages, numbers, reports, ussd, users
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,7 +23,12 @@ app.include_router(messages.router)
 app.include_router(numbers.router)
 app.include_router(reports.router)
 app.include_router(ussd.router)
+app.include_router(users.router)
 
 @app.get("/")
 def home():
     return FileResponse("index.html")
+
+@app.get("/admin")
+def admin():
+    return FileResponse("admin.html")

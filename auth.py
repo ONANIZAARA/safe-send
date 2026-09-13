@@ -44,3 +44,4 @@ def get_current_user(token: str = None):
     if not token:
         return None
     return decode_token(token)
+# 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

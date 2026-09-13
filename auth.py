@@ -1,5 +1,4 @@
 import hashlib
-import hmac
 import secrets
 import json
 import base64
@@ -43,5 +42,4 @@ def decode_token(token: str):
 def get_current_user(token: str = None):
     if not token:
         return None
-    return decode_token(token)
-# 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
+    return decode_token(token)git add .

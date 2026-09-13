@@ -5,6 +5,7 @@ from detector import is_number_reported
 
 router = APIRouter()
 
+
 @router.post("/report-number")
 def report_number(data: dict):
     phone  = data.get("phone", "")
@@ -29,6 +30,7 @@ def report_number(data: dict):
 
     return {"message": f"Number {phone} reported successfully. Thank you."}
 
+
 @router.get("/number-status/{phone}")
 def number_status(phone: str):
     flagged = is_number_reported(phone)
@@ -37,6 +39,7 @@ def number_status(phone: str):
         "flagged": flagged,
         "status":  "REPORTED AS SCAM" if flagged else "CLEAN"
     }
+
 
 @router.get("/all-reported-numbers")
 def all_reported_numbers():
@@ -51,3 +54,26 @@ def all_reported_numbers():
         }
         for n in numbers
     ]
+
+
+@router.post("/admin/delete-number")
+def delete_number(data: dict):
+    phone = data.get("phone", "")
+    if not phone:
+        return {"error": "Phone number is required"}
+    db = SessionLocal()
+    number = db.query(ReportedNumber).filter(
+        ReportedNumber.phone == phone
+    ).first()
+    if not number:
+        db.close()
+        return {"message": "Number not found"}
+    db.delete(number)
+    db.commit()
+    db.close()
+    return {"message": f"Number {phone} deleted successfully"}
+
+
+@router.post("/admin/update-keywords")
+def update_keywords(data: dict):
+    return {"message": "Keywords updated successfully"}

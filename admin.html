@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SafeSend Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0f1117;--card:#1e2334;--border:#2a3050;--gold:#c9a84c;--text:#e8e8f0;--muted:#8890a8;--danger:#e05a5a;--warning:#e0a84c;--success:#4caf82}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:240px;background:var(--card);border-right:1px solid var(--border);padding:24px;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-logo{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);margin-bottom:4px}
+.sidebar-sub{font-size:11px;color:var(--muted);margin-bottom:32px}
+.nav-item{padding:10px 14px;border-radius:10px;cursor:pointer;font-size:14px;color:var(--muted);margin-bottom:4px;transition:all 0.2s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--bg);color:var(--gold);font-weight:600}
+.nav-divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.sidebar-bottom{margin-top:auto}
+.btn-logout-admin{width:100%;padding:10px 14px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer;transition:all 0.2s;text-align:left}
+.btn-logout-admin:hover{border-color:var(--danger);color:var(--danger);background:transparent}
+.main{flex:1;padding:32px;overflow-y:auto}
+.page{display:none}
+.page.active{display:block}
+.page-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--gold);margin-bottom:8px}
+.page-sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.stat-number{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;margin-bottom:4px}
+.stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.card-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:16px}
+.table-wrap{overflow:hidden;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:12px 16px;text-align:left;font-weight:600}
+td{padding:12px 16px;border-top:1px solid var(--border);color:var(--text)}
+tr:hover td{background:#ffffff05}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-high{background:#e05a5a22;color:var(--danger);border:1px solid var(--danger)}
+.badge-sus{background:#e0a84c22;color:var(--warning);border:1px solid var(--warning)}
+.badge-safe{background:#4caf8222;color:var(--success);border:1px solid var(--success)}
+.badge-high-kw{background:#e05a5a22;color:var(--danger);border:1px solid var(--danger)}
+.badge-medium-kw{background:#e0a84c22;color:var(--warning);border:1px solid var(--warning)}
+.badge-low-kw{background:#4caf8222;color:var(--success);border:1px solid var(--success)}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;border:none;width:auto}
+.btn-primary{background:var(--gold);color:#0f1117}
+.btn-primary:hover{background:#dbb85a}
+.btn-danger{background:#e05a5a22;color:var(--danger);border:1px solid var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-success{background:#4caf8222;color:var(--success);border:1px solid var(--success)}
+.btn-success:hover{background:var(--success);color:#fff}
+.form-row{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.form-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;width:100%}
+.form-input:focus{border-color:var(--gold)}
+.form-select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;width:100%}
+.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:999}
+.toast.show{transform:
+    <div class="auth-wrap" id="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">SafeSend</div>
+    <div class="auth-sub">Admin Panel — Restricted Access</div>
+    <div class="auth-error" id="admin-login-error"></div>
+    <div class="auth-label">Admin Username</div>
+    <input class="auth-input" id="admin-username" type="text" placeholder="Enter admin username"/>
+    <div class="auth-label">Password</div>
+    <input class="auth-input" id="admin-password" type="password" placeholder="Enter password"/>
+    <button class="auth-btn" onclick="doAdminLogin()">Login to Admin Panel</button>
+  </div>
+</div>
+
+<div class="admin-wrap" id="admin-wrap">
+  <div class="sidebar">
+    <div class="sidebar-logo">SafeSend</div>
+    <div class="sidebar-sub">Admin Panel</div>
+    <button class="nav-item active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-item" onclick="showPage('keywords',this)">Scam Keywords</button>
+    <button class="nav-item" onclick="showPage('numbers',this)">Reported Numbers</button>
+    <button class="nav-item" onclick="showPage('users',this)">Users</button>
+    <button class="nav-item" onclick="showPage('reports',this)">Scam Reports</button>
+    <hr class="nav-divider"/>
+    <div class="sidebar-bottom">
+      <button class="btn-logout-admin" onclick="doAdminLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Overview of SafeSend activity</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-number" style="color:var(--gold)" id="a-total">-</div><div class="stat-label">Total Checks</div></div>
+        <div class="stat-card"><div class="stat-number" style="color:var(--danger)" id="a-high">-</div><div class="stat-label">High Risk</div></div>
+        <div class="stat-card"><div class="stat-number" style="color:var(--success)" id="a-users">-</div><div class="stat-label">Total Users</div></div>
+        <div class="stat-card"><div class="stat-number" style="color:var(--warning)" id="a-numbers">-</div><div class="stat-label">Reported Numbers</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Scam Reports</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Phone</th><th>Risk</th><th>Message</th><th>Date</th></tr></thead>
+            <tbody id="a-reports-table"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEYWORDS PAGE -->
+    <div id="page-keywords" class="page">
+      <div class="page-title">Scam Keywords</div>
+      <div class="page-sub">Add, edit or remove keywords used to detect scams. Changes take effect immediately.</div>
+      <div class="card">
+        <div class="card-title">Add New Keyword</div>
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">Keyword or phrase</div>
+            <input class="form-input" id="new-keyword" type="text" placeholder="e.g. send your pin"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Weight</div>
+            <select class="form-select" id="new-weight">
+              <option value="high">High (0.6) — Strong scam signal</option>
+              <option value="medium">Medium (0.3) — Suspicious</option>
+              <option value="low">Low (0.1) — Weak signal</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="addKeyword()">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">High Weight Keywords</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Keyword</th><th>Weight</th><th>Action</th></tr></thead>
+            <tbody id="kw-high-table"><tr><td colspan="3" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Medium Weight Keywords</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Keyword</th><th>Weight</th><th>Action</th></tr></thead>
+            <tbody id="kw-medium-table"><tr><td colspan="3" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Low Weight Keywords</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Keyword</th><th>Weight</th><th>Action</th></tr></thead>
+            <tbody id="kw-low-table"><tr><td colspan="3" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUMBERS PAGE -->
+    <div id="page-numbers" class="page">
+      <div class="page-title">Reported Numbers</div>
+      <div class="page-sub">All numbers reported as scam by users.</div>
+      <div class="card">
+        <div class="card-title">Add Number Manually</div>
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">Phone number</div>
+            <input class="form-input" id="new-number" type="text" placeholder="+256700000000"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Reason</div>
+            <input class="form-input" id="new-number-reason" type="text" placeholder="e.g. Asked for PIN"/>
+          </div>
+          <button class="btn btn-primary" onclick="addNumber()">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">All Reported Numbers</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Phone</th><th>Reason</th><th>Reported At</th><th>Action</th></tr></thead>
+            <tbody id="numbers-admin-table"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS PAGE -->
+    <div id="page-users" class="page">
+      <div class="page-title">Users</div>
+      <div class="page-sub">All registered users on SafeSend.</div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Joined</th></tr></thead>
+            <tbody id="users-table"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS PAGE -->
+    <div id="page-reports" class="page">
+      <div class="page-title">Scam Reports</div>
+      <div class="page-sub">All message checks performed on SafeSend.</div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Phone</th><th>Risk</th><th>Message</th><th>Date</th></tr></thead>
+            <tbody id="all-reports-table"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const API='http://127.0.0.1:8000';
+const ADMIN_USER='admin';
+const ADMIN_PASS='safesend2024';
+
+// Keywords stored in memory — admin can add/remove
+let keywords={
+  high:['send pin','send your pin','tuma pin','send otp','share your pin','enter your pin','your account is blocked','akaunti imezuiwa','account will be closed','reverse the transaction','you have won','umeshinda','call to claim','click to claim','you are a winner','send money to activate','send money to unlock'],
+  medium:['urgent','act now','haraka','jangu mangu','limited time','verify your account','thibitisha','claim your','congratulations','free money','guaranteed','risk free','click here','bonyeza hapa','reactivate','suspended','confirm your details'],
+  low:['winner','prize','gift','reward','bonus','offer','pesa','sente','foseka']
+};
+
+function doAdminLogin(){
+  const username=document.getElementById('admin-username').value.trim();
+  const password=document.getElementById('admin-password').value.trim();
+  const errEl=document.getElementById('admin-login-error');
+  errEl.classList.remove('show');
+  if(username===ADMIN_USER&&password===ADMIN_PASS){
+    localStorage.setItem('admin_logged_in','true');
+    document.getElementById('auth-wrap').style.display='none';
+    document.getElementById('admin-wrap').classList.add('show');
+    loadDashboard();
+  }else{
+    errEl.textContent='Invalid username or password';
+    errEl.classList.add('show');
+  }
+}
+
+function doAdminLogout(){
+  localStorage.removeItem('admin_logged_in');
+  document.getElementById('admin-wrap').classList.remove('show');
+  document.getElementById('auth-wrap').style.display='flex';
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  if(localStorage.getItem('admin_logged_in')==='true'){
+    document.getElementById('auth-wrap').style.display='none';
+    document.getElementById('admin-wrap').classList.add('show');
+    loadDashboard();
+  }
+  document.getElementById('admin-password').addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();});
+});
+
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='dashboard')loadDashboard();
+  if(name==='keywords')loadKeywords();
+  if(name==='numbers')loadNumbers();
+  if(name==='users')loadUsers();
+  if(name==='reports')loadReports();
+}
+
+async function loadDashboard(){
+  try{
+    const stats=await(await fetch(API+'/scam-stats')).json();
+    document.getElementById('a-total').textContent=stats.total_checks;
+    document.getElementById('a-high').textContent=stats.high_risk;
+    const nums=await(await fetch(API+'/all-reported-numbers')).json();
+    document.getElementById('a-numbers').textContent=nums.length;
+    const users=await(await fetch(API+'/all-users')).json();
+    document.getElementById('a-users').textContent=users.length;
+    const reps=await(await fetch(API+'/all-scam-reports')).json();
+    document.getElementById('a-reports-table').innerHTML=reps.length===0
+      ?'<tr><td colspan="4" class="empty-state">No reports yet</td></tr>'
+      :reps.slice(-10).reverse().map(r=>{
+        const s=parseFloat(r.risk_score);
+        const b=s>=0.6?'<span class="badge badge-high">HIGH RISK</span>':s>=0.3?'<span class="badge badge-sus">SUSPICIOUS</span>':'<span class="badge badge-safe">SAFE</span>';
+        const m=r.message.length>50?r.message.substring(0,50)+'...':r.message;
+        return'<tr><td>'+(r.phone||'-')+'</td><td>'+b+'</td><td style="color:var(--muted)">'+m+'</td><td style="color:var(--muted)">'+formatDate(r.reported_at)+'</td></tr>';
+      }).join('');
+  }catch(e){showToast('Could not load dashboard','error');}
+}
+
+function loadKeywords(){
+  ['high','medium','low'].forEach(level=>{
+    const tbody=document.getElementById('kw-'+level+'-table');
+    const weight=level==='high'?'0.6':level==='medium'?'0.3':'0.1';
+    const badgeClass='badge-'+level+'-kw';
+    tbody.innerHTML=keywords[level].length===0
+      ?'<tr><td colspan="3" class="empty-state">No keywords</td></tr>'
+      :keywords[level].map((kw,i)=>`
+        <tr>
+          <td>${kw}</td>
+          <td><span class="badge ${badgeClass}">${weight}</span></td>
+          <td><button class="btn btn-danger" onclick="removeKeyword('${level}',${i})">Remove</button></td>
+        </tr>`).join('');
+  });
+}
+
+function addKeyword(){
+  const kw=document.getElementById('new-keyword').value.trim().toLowerCase();
+  const weight=document.getElementById('new-weight').value;
+  if(!kw){showToast('Please enter a keyword','error');return;}
+  const allKws=[...keywords.high,...keywords.medium,...keywords.low];
+  if(allKws.includes(kw)){showToast('Keyword already exists','error');return;}
+  keywords[weight].push(kw);
+  document.getElementById('new-keyword').value='';
+  loadKeywords();
+  showToast('Keyword added successfully','success');
+  saveKeywordsToServer();
+}
+
+function removeKeyword(level,index){
+  keywords[level].splice(index,1);
+  loadKeywords();
+  showToast('Keyword removed','success');
+  saveKeywordsToServer();
+}
+
+async function saveKeywordsToServer(){
+  try{
+    await fetch(API+'/admin/update-keywords',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(keywords)
+    });
+  }catch(e){}
+}
+
+async function loadNumbers(){
+  try{
+    const nums=await(await fetch(API+'/all-reported-numbers')).json();
+    document.getElementById('numbers-admin-table').innerHTML=nums.length===0
+      ?'<tr><td colspan="4" class="empty-state">No numbers reported yet</td></tr>'
+      :nums.map(n=>`
+        <tr>
+          <td>${n.phone}</td>
+          <td style="color:var(--muted)">${n.reason||'-'}</td>
+          <td style="color:var(--muted)">${formatDate(n.reported_at)}</td>
+          <td><button class="btn btn-danger" onclick="deleteNumber('${n.phone}')">Delete</button></td>
+        </tr>`).join('');
+  }catch(e){showToast('Could not load numbers','error');}
+}
+
+async function addNumber(){
+  const phone=document.getElementById('new-number').value.trim();
+  const reason=document.getElementById('new-number-reason').value.trim();
+  if(!phone){showToast('Please enter a phone number','error');return;}
+  try{
+    const res=await fetch(API+'/report-number',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,reason})});
+    const data=await res.json();
+    showToast(data.message,'success');
+    document.getElementById('new-number').value='';
+    document.getElementById('new-number-reason').value='';
+    loadNumbers();
+  }catch(e){showToast('Could not add number','error');}
+}
+
+async function deleteNumber(phone){
+  try{
+    const res=await fetch(API+'/admin/delete-number',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
+    const data=await res.json();
+    showToast(data.message,'success');
+    loadNumbers();
+  }catch(e){showToast('Could not delete number','error');}
+}
+
+async function loadUsers(){
+  try{
+    const users=await(await fetch(API+'/all-users')).json();
+    document.getElementById('users-table').innerHTML=users.length===0
+      ?'<tr><td colspan="4" class="empty-state">No users yet</td></tr>'
+      :users.map(u=>`
+        <tr>
+          <td style="color:var(--muted)">${u.id}</td>
+          <td>${u.username}</td>
+          <td style="color:var(--muted)">${u.email}</td>
+          <td style="color:var(--muted)">${formatDate(u.created_at)}</td>
+        </tr>`).join('');
+  }catch(e){showToast('Could not load users','error');}
+}
+
+async function loadReports(){
+  try{
+    const reps=await(await fetch(API+'/all-scam-reports')).json();
+    document.getElementById('all-reports-table').innerHTML=reps.length===0
+      ?'<tr><td colspan="4" class="empty-state">No reports yet</td></tr>'
+      :reps.reverse().map(r=>{
+        const s=parseFloat(r.risk_score);
+        const b=s>=0.6?'<span class="badge badge-high">HIGH RISK</span>':s>=0.3?'<span class="badge badge-sus">SUSPICIOUS</span>':'<span class="badge badge-safe">SAFE</span>';
+        const m=r.message.length>60?r.message.substring(0,60)+'...':r.message;
+        return'<tr><td>'+(r.phone||'-')+'</td><td>'+b+'</td><td style="color:var(--muted)">'+m+'</td><td style="color:var(--muted)">'+formatDate(r.reported_at)+'</td></tr>';
+      }).join('');
+  }catch(e){showToast('Could not load reports','error');}
+}
+
+function formatDate(str){
+  if(!str)return'-';
+  const d=new Date(str);
+  if(isNaN(d))return str.split('.')[0];
+  return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  setTimeout(()=>{t.className='toast';},3000);
+}
+</script>
+</body>
+</html>

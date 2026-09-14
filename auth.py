@@ -6,10 +6,12 @@ import time
 
 SECRET_KEY = "safesend-secret-key-2024"
 
+
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
     hashed = hashlib.sha256((salt + password).encode()).hexdigest()
     return f"{salt}:{hashed}"
+
 
 def verify_password(plain: str, hashed: str) -> bool:
     try:
@@ -18,6 +20,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     except Exception:
         return False
 
+
 def create_token(data: dict) -> str:
     payload = data.copy()
     payload["exp"] = int(time.time()) + 86400
@@ -25,6 +28,7 @@ def create_token(data: dict) -> str:
     payload_b64 = base64.b64encode(payload_json.encode()).decode()
     sig = hashlib.sha256((payload_b64 + SECRET_KEY).encode()).hexdigest()
     return f"{payload_b64}.{sig}"
+
 
 def decode_token(token: str):
     try:
@@ -39,7 +43,8 @@ def decode_token(token: str):
     except Exception:
         return None
 
+
 def get_current_user(token: str = None):
     if not token:
         return None
-    return decode_token(token)git add .
+    return decode_token(token)

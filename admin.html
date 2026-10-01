@@ -56,10 +56,15 @@ tr:hover td{background:#ffffff05}
 .form-input:focus{border-color:var(--gold)}
 .form-select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;width:100%}
 .empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-.toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:999}
-.toast.show{transform:
-    <div class="auth-wrap" id="auth-wrap">
-  <div class="auth-box">
+   .toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:999}
+   .toast.show{transform:translateY(0);opacity:1;}
+   .toast.success{background:var(--success);color:#fff;}
+   .toast.error{background:var(--danger);color:#fff;}
+   </style>
+   </head>
+   <body>
+   <div class="auth-wrap" id="auth-wrap">
+     <div class="auth-box">
     <div class="auth-logo">SafeSend</div>
     <div class="auth-sub">Admin Panel — Restricted Access</div>
     <div class="auth-error" id="admin-login-error"></div>

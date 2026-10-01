@@ -1,5 +1,3 @@
-import os
-from pathlib import Path
 from fastapi import FastAPI, Depends
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,13 +5,6 @@ from sqlalchemy.orm import Session
 from database import Base, engine, get_db
 from models import AuditLog
 from routes import messages, numbers, reports, ussd, users
-
-# --- TEMPORARY: Delete old DB to create the missing audit_logs table ---
-DB_FILE = "safesend.db"
-if Path(DB_FILE).exists():
-    os.remove(DB_FILE)
-    print("✅ Deleted old database to create audit_logs table.")
-# -----------------------------------------------------------------------
 
 Base.metadata.create_all(bind=engine)
 

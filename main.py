@@ -1,19 +1,10 @@
-import os
-from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine
 from routes import messages, numbers, reports, ussd, users
 
-# --- FIX: Delete old database to prevent schema mismatch errors ---
-DB_FILE = "safesend.db"
-if Path(DB_FILE).exists():
-    os.remove(DB_FILE)
-    print(f"✅ Deleted old {DB_FILE} to recreate with the new schema")
-# ------------------------------------------------------------------
-
-# Create all tables in the fresh database
+# Create tables (this will safely update the database without deleting it)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(

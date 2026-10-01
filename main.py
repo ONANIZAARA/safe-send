@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from fastapi import FastAPI, Depends
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,7 +8,13 @@ from database import Base, engine, get_db
 from models import AuditLog
 from routes import messages, numbers, reports, ussd, users
 
-# Create all tables in the database (This is safe and won't delete existing data)
+# --- TEMPORARY FIX: Delete old database to create missing audit_logs table ---
+DB_FILE = "safesend.db"
+if Path(DB_FILE).exists():
+    os.remove(DB_FILE)
+    print("✅ Deleted old database to create audit_logs table.")
+# -----------------------------------------------------------------------------
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -36,7 +44,6 @@ def home():
 def admin():
     return FileResponse("admin.html")
 
-# Route to view Audit Logs for Non-Repudiation
 @app.get("/admin/audit-logs")
 def get_audit_logs(db: Session = Depends(get_db)):
     logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(50).all()

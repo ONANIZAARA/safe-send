@@ -19,19 +19,16 @@ def register(request: Request, data: dict):
 
     db = SessionLocal()
 
-    # Check if username already exists
     existing_username = db.query(User).filter(User.username == username).first()
     if existing_username:
         db.close()
         raise HTTPException(status_code=400, detail="Username already taken")
 
-    # Check if email already exists
     existing_email = db.query(User).filter(User.email == email).first()
     if existing_email:
         db.close()
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create new user
     new_user = User(
         username=username,
         email=email,
@@ -40,13 +37,15 @@ def register(request: Request, data: dict):
     db.add(new_user)
     db.commit()
 
-    # --- NEW: Record the registration for Non-Repudiation ---
-    create_audit_log(db, username, "USER_REGISTER", f"New account created", request.client.host)
-    # --------------------------------------------------------
+    # SAVE USERNAME BEFORE CLOSING DB
+    saved_username = new_user.username 
+
+    ip = request.client.host if request.client else "Unknown"
+    create_audit_log(db, saved_username, "USER_REGISTER", f"New account created", ip)
 
     db.close()
 
-    return {"message": f"Account created successfully. Welcome {username}!"}
+    return {"message": f"Account created successfully. Welcome {saved_username}!"}
 
 
 @router.post("/login")
@@ -57,8 +56,8 @@ def login(request: Request, data: dict):
     if not username or not password:
         raise HTTPException(status_code=400, detail="Username and password are required")
 
-    db     = SessionLocal()
-    user   = db.query(User).filter(User.username == username).first()
+    db = SessionLocal()
+    user = db.query(User).filter(User.username == username).first()
     
     if not user:
         db.close()
@@ -68,29 +67,28 @@ def login(request: Request, data: dict):
         db.close()
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    token = create_token({"sub": user.username})
+    # SAVE USERNAME BEFORE CLOSING DB
+    saved_username = user.username
+    token = create_token({"sub": saved_username})
 
-    # --- NEW: Record the login for Non-Repudiation ---
-    create_audit_log(db, user.username, "USER_LOGIN", f"User logged in successfully", request.client.host)
-    # -------------------------------------------------
+    ip = request.client.host if request.client else "Unknown"
+    create_audit_log(db, saved_username, "USER_LOGIN", f"User logged in successfully", ip)
 
     db.close()
 
     return {
         "token":    token,
-        "username": user.username,
-        "message":  f"Welcome back {user.username}!"
+        "username": saved_username,
+        "message":  f"Welcome back {saved_username}!"
     }
-
 
 @router.get("/me")
 def get_me(data: dict = None):
     return {"message": "Profile endpoint - coming soon"}
 
-
 @router.get("/all-users")
 def all_users():
-    db    = SessionLocal()
+    db = SessionLocal()
     users = db.query(User).all()
     db.close()
     return [

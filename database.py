@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from models import AuditLog # Import the new AuditLog model
 
 engine = create_engine("sqlite:///safesend.db")
 
@@ -16,9 +15,13 @@ def get_db():
     finally:
         db.close()
 
-# --- NEW: Helper function to record actions ---
+# --- Helper function to record actions ---
 def create_audit_log(db, username: str, action: str, details: str, ip_address: str = "Unknown"):
     """Records an action for Non-Repudiation"""
+    
+    # We import AuditLog HERE to avoid the circular import error!
+    from models import AuditLog 
+    
     log_entry = AuditLog(
         username=username,
         action=action,

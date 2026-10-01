@@ -6,6 +6,7 @@ from database import Base, engine, get_db
 from models import AuditLog
 from routes import messages, numbers, reports, ussd, users
 
+# Create all tables safely (This will NOT delete your data)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(

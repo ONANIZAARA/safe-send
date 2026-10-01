@@ -8,12 +8,12 @@ from database import Base, engine, get_db
 from models import AuditLog
 from routes import messages, numbers, reports, ussd, users
 
-# --- TEMPORARY: Delete old DB to create audit_logs table ---
+# --- TEMPORARY: Delete old DB to create the missing audit_logs table ---
 DB_FILE = "safesend.db"
 if Path(DB_FILE).exists():
     os.remove(DB_FILE)
     print("✅ Deleted old database to create audit_logs table.")
-# -----------------------------------------------------------
+# -----------------------------------------------------------------------
 
 Base.metadata.create_all(bind=engine)
 

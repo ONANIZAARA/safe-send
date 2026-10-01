@@ -196,13 +196,18 @@ tr:hover td{background:#ffffff05}
 
 <div class="app-wrap" id="app-wrap">
   <div class="container">
-    <div class="topbar">
+       <div class="topbar">
       <div class="topbar-logo">SafeSend</div>
       <div class="topbar-right">
         <div class="user-badge">
           <div class="user-dot"></div>
           <span id="username-display">User</span>
         </div>
+        <!-- NEW: Admin Panel Shortcut -->
+        <button class="btn-logout" onclick="window.location.href='/admin'" style="margin-right: 8px; border-color: var(--gold); color: var(--gold);">Admin Panel</button>
+        <button class="btn-logout" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
         <button class="btn-logout" onclick="doLogout()">Logout</button>
       </div>
     </div>

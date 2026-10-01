@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException
-from database import SessionLocal
+from fastapi import APIRouter, HTTPException, Request
+from database import SessionLocal, create_audit_log
 from models import User
 from auth import hash_password, verify_password, create_token
 
 router = APIRouter()
 
-
 @router.post("/register")
-def register(data: dict):
+def register(request: Request, data: dict):
     username = data.get("username", "").strip()
     email    = data.get("email", "").strip()
     password = data.get("password", "").strip()
@@ -40,13 +39,18 @@ def register(data: dict):
     )
     db.add(new_user)
     db.commit()
+
+    # --- NEW: Record the registration for Non-Repudiation ---
+    create_audit_log(db, username, "USER_REGISTER", f"New account created", request.client.host)
+    # --------------------------------------------------------
+
     db.close()
 
     return {"message": f"Account created successfully. Welcome {username}!"}
 
 
 @router.post("/login")
-def login(data: dict):
+def login(request: Request, data: dict):
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
 
@@ -55,15 +59,22 @@ def login(data: dict):
 
     db     = SessionLocal()
     user   = db.query(User).filter(User.username == username).first()
-    db.close()
-
+    
     if not user:
+        db.close()
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     if not verify_password(password, user.password):
+        db.close()
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     token = create_token({"sub": user.username})
+
+    # --- NEW: Record the login for Non-Repudiation ---
+    create_audit_log(db, user.username, "USER_LOGIN", f"User logged in successfully", request.client.host)
+    # -------------------------------------------------
+
+    db.close()
 
     return {
         "token":    token,

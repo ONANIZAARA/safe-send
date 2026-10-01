@@ -72,19 +72,23 @@ tr:hover td{background:#ffffff05}
 </div>
 
 <div class="admin-wrap" id="admin-wrap">
-  <div class="sidebar">
-    <div class="sidebar-logo">SafeSend</div>
-    <div class="sidebar-sub">Admin Panel</div>
-    <button class="nav-item active" onclick="showPage('dashboard',this)">Dashboard</button>
-    <button class="nav-item" onclick="showPage('keywords',this)">Scam Keywords</button>
-    <button class="nav-item" onclick="showPage('numbers',this)">Reported Numbers</button>
-    <button class="nav-item" onclick="showPage('users',this)">Users</button>
-    <button class="nav-item" onclick="showPage('reports',this)">Scam Reports</button>
-    <hr class="nav-divider"/>
-    <div class="sidebar-bottom">
-      <button class="btn-logout-admin" onclick="doAdminLogout()">Logout</button>
-    </div>
-  </div>
+    <div class="sidebar">
+     <div class="sidebar-logo">SafeSend</div>
+     <div class="sidebar-sub">Admin Panel</div>
+     <button class="nav-item active" onclick="showPage('dashboard',this)">Dashboard</button>
+     <button class="nav-item" onclick="showPage('keywords',this)">Scam Keywords</button>
+     <button class="nav-item" onclick="showPage('numbers',this)">Reported Numbers</button>
+     <button class="nav-item" onclick="showPage('users',this)">Users</button>
+     <button class="nav-item" onclick="showPage('reports',this)">Scam Reports</button>
+     <hr class="nav-divider"/>
+     
+     <!-- NEW: Shortcut to Audit Logs for Non-Repudiation -->
+     <button class="nav-item" onclick="window.location.href='/admin/audit-logs'" style="color: var(--gold);">📜 Audit Logs</button>
+     
+     <div class="sidebar-bottom">
+       <button class="btn-logout-admin" onclick="doAdminLogout()">Logout</button>
+     </div>
+   </div>
 
   <div class="main">
 

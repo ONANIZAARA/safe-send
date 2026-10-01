@@ -1,10 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from database import Base, engine
+from sqlalchemy.orm import Session
+from database import Base, engine, get_db
+from models import AuditLog
 from routes import messages, numbers, reports, ussd, users
 
-# Create tables (this will safely update the database without deleting it)
+# Create all tables (this safely updates the database without deleting it)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -33,3 +35,19 @@ def home():
 @app.get("/admin")
 def admin():
     return FileResponse("admin.html")
+
+# --- NEW: Route to view Audit Logs for Non-Repudiation ---
+@app.get("/admin/audit-logs")
+def get_audit_logs(db: Session = Depends(get_db)):
+    # Fetch the last 50 logs, newest first
+    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(50).all()
+    return [
+        {
+            "time": str(log.timestamp),
+            "user": log.username,
+            "action": log.action,
+            "details": log.details,
+            "ip": log.ip_address
+        } 
+        for log in logs
+    ]
